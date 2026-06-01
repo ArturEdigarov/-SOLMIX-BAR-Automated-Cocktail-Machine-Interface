@@ -1,3 +1,4 @@
+
 # 🍹 SOLMIX BAR — Automated Cocktail Machine Interface
 
 An intuitive, dark-themed, responsive web interface built with **React**, **Tailwind CSS**, and **shadcn/ui** to control a hardware automated cocktail mixer (via a Python backend). 
@@ -45,3 +46,6 @@ pumps_ml = [int(x) for x in barcode_input.split()]
 
 print(pumps_ml) 
 # Output: [40, 5, 5, 34, 46, 55, 5, 5, 5] -> Ready to pump!
+```
+<img width="714" height="950" alt="Bildschirmfoto 2026-06-01 um 16 43 15" src="https://github.com/user-attachments/assets/60ecc699-f17b-4e1d-9863-e93e03da3241" />
+<img width="1829" height="956" alt="Bildschirmfoto 2026-06-01 um 16 44 10" src="https://github.com/user-attachments/assets/1dfb8f71-e1fa-43bd-a222-20bb308cef48" />

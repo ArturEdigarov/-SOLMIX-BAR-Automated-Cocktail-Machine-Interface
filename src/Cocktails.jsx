@@ -194,14 +194,16 @@ const Cocktails = () => {
                             {/* Контейнер штрихкода */}
                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex justify-center items-center w-full overflow-x-auto shadow-inner">
                                 {barcodeString && (
-                                    <Barcode 
+                                    <div className="w-full max-w-[400px] sm:max-w-md flex justify-center [&>svg]:w-full [&>svg]:h-auto">
+                                        <Barcode 
                                         value={barcodeString} 
                                         format="CODE128"
-                                        width={1.5}
-                                        height={80}
+                                        width={1.2} 
+                                        height={70}
                                         lineColor="#090d16"
                                         background="#f8fafc"
-                                    />
+                                        />
+                                    </div>
                                 )}
                             </div>
 

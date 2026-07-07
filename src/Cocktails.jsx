@@ -114,7 +114,6 @@ const Cocktails = () => {
                         variant="ghost" 
                         size="icon"
                         onClick={() => setIsScannerOpen(true)}
-                        disabled={totalVolume < 200}
                         className="rounded-xl border border-slate-900 bg-slate-900/20 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 disabled:opacity-20 transition-all cursor-pointer"
                     >
                             

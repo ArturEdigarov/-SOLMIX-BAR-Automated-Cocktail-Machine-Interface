@@ -1,0 +1,122 @@
+import React, { useState } from 'react';
+import { Slider } from "@/components/ui/slider"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import Barcode from 'react-barcode';
+
+    const PUMPS = [
+    { id: 0, name: "Wodka", isAlcohol: true },
+    { id: 1, name: "Orangensaft", isAlcohol: true },
+    { id: 2, name: "Gin", isAlcohol: true },
+    { id: 3, name: "Granatapfel", isAlcohol: false },
+    { id: 4, name: "Ws.Rum", isAlcohol: false },
+    { id: 5, name: "Erdbeere", isAlcohol: false },
+    { id: 6, name: "Limettensirup", isAlcohol: false },
+    { id: 7, name: "Tonic", isAlcohol: false },
+    { id: 8, name: "Ananas Kokos", isAlcohol: false },
+];
+
+const Cocktails = () => {
+    const [value, setValue] = React.useState(Array(9).fill(0));
+    const [barcodeString, setBarcodeString] = useState("");
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const totalVolume = value.reduce((sum, v) => sum + v, 0);
+    const alcoholVolume = value.reduce((sum, v, id) => sum + (PUMPS[id].isAlcohol ? v : 0), 0);
+    const handleSliderChange = (id, newValue) => {
+        const targetValue = newValue[0]; // То значение, куда пользователь ТЯНЕТ ползунок
+        const currentValue = value[id];  // Сколько в этом ползунке было ДО движения
+
+        // 1. Считаем сумму ОСТАЛЬНЫХ помп (вычитаем текущую помпу из общей суммы)
+        const otherTotal = totalVolume - currentValue;
+        const otherAlcohol = alcoholVolume - (PUMPS[id].isAlcohol ? currentValue : 0);
+
+        // 2. По умолчанию разрешаем то, что хочет пользователь
+        let allowedValue = targetValue;
+
+        // 3. Проверяем ОБЩИЙ лимит (200 мл)
+        // Если остаток + новое значение > 200, то максимум, что мы разрешаем — это чистый остаток
+        if (otherTotal + allowedValue > 200) {
+            allowedValue = 200 - otherTotal;
+        }
+
+        // 4. Проверяем АЛКОГОЛЬНЫЙ лимит (50 мл), только если двигают алкогольную помпу
+        if (PUMPS[id].isAlcohol && (otherAlcohol + allowedValue > 50)) {
+            allowedValue = 50 - otherAlcohol;
+        }
+
+        // Защита от ухода в минус (на случай странных вычислений)
+        if (allowedValue < 0) allowedValue = 0;
+
+        // 5. Записываем строго разрешенный объем в стейт
+        const updatedVolumes = [...value];
+        updatedVolumes[id] = allowedValue;
+        setValue(updatedVolumes);
+    }
+
+    const handleMixClick = () => {
+        // Массив [0, 25, 0, 100, 50, 0, 0, 15, 0] превращается в строку "0 25 0 100 50 0 0 15 0"
+        const generatedString = value.join(" "); 
+        
+        setBarcodeString(generatedString); // Сохраняем строку для штрихкода
+        setIsModalOpen(true);              // Открываем всплывающее окно shadcn
+    }
+
+  return (
+    <>
+        {PUMPS.map(pump => (
+        <div key={pump.id} className="mt-4 text-slate-400 font-mono">   
+            <span className={pump.isAlcohol ? "text-purple-400 font-bold" : "text-slate-300"}>
+                {pump.name}: {value[pump.id]} ml
+            </span>        
+            <Slider
+            value={[value[pump.id]]}
+            onValueChange={(newValue) => handleSliderChange(pump.id, newValue)}
+            max={pump.isAlcohol ? 50 : 100}
+            step={1}
+            disabled={false}
+            className={`${pump.isAlcohol ? "w-50" : "w-100"} mx-auto max-w-xs`}
+            />
+        </div>
+        ))}
+        <Button variant='outline' onClick={handleMixClick}>Mix</Button>
+
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogContent className="sm:max-w-xl max-w-[90vw] overflow-hidden bg-white text-slate-900 rounded-3xl p-6">
+                <DialogHeader>
+                    <DialogTitle>Отсканируйте BarCode</DialogTitle>
+                    <DialogDescription>
+                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-center items-center my-4">
+                    {barcodeString && (
+                        <Barcode 
+                            value={barcodeString} 
+                            format="CODE128"
+                            width={1.4}
+                            height={60}
+                            lineColor="#0f172a"
+                            background="#f8fafc"
+                        />
+                    )}
+                </div>
+
+                
+                <div className="text-left bg-slate-100 p-2 rounded-lg font-mono text-xs text-slate-500">
+                    <span className="font-bold block text-[10px] text-slate-400">Хорошего вечера!</span>
+                    У вас явно есть вкус!
+                </div>
+                    </DialogDescription>
+                </DialogHeader>
+            </DialogContent>
+        </Dialog>
+    </>
+  )
+};
+
+export default Cocktails

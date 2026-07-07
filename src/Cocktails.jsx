@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Slider } from "@/components/ui/slider"
 import { Button } from "@/components/ui/button"
 import Barcode from 'react-barcode';
-import { Trash2, Wine, Citrus, Activity } from "lucide-react"; 
+import { Trash2, Wine, Citrus, Activity, QrCode, Share } from "lucide-react"; 
 import {
   Dialog,
   DialogContent,
@@ -10,7 +10,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-
+import QrCodeDialog from './componnents/QrCodeDialog';
+import ShareDialog from './componnents/ShareDialog';
 const PUMPS = [
     { id: 0, name: "Wodka", isAlcohol: true },
     { id: 1, name: "Orangensaft", isAlcohol: false },
@@ -24,12 +25,37 @@ const PUMPS = [
 ];
 
 const Cocktails = () => {
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+    const [shareData, setShareData] = useState("");
+
+    const [isScannerOpen, setIsScannerOpen] = useState(false);
+
     const [value, setValue] = React.useState(Array(9).fill(0)); // Начинаем с 0 для красоты
     const [barcodeString, setBarcodeString] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false); 
 
     const totalVolume = value.reduce((sum, v) => sum + v, 0);
     const alcoholVolume = value.reduce((sum, v, id) => sum + (PUMPS[id].isAlcohol ? v : 0), 0);
+
+    const handleScanSuccess = (data) => {
+        // data это строка типа "Berlin Sunset|30,0,20,0,0,150,0,0,0"
+        try {
+            const [name, valuesString] = data.split('|');
+            const newValues = valuesString.split(',').map(Number);
+            
+            setValue(newValues);    // Обновляем слайдеры
+            setIsScannerOpen(false); // Закрываем сканер
+        } catch (e) {
+            alert("Неверный QR-код");
+        }
+    };
+    const prepareShareData = () => {
+        // Формат: "Название|30,0,20,..."
+        const name = "Mein Cocktail"; // Можно добавить input для имени
+        const data = `${name}|${value.join(',')}`;
+        setShareData(data);
+        setIsShareModalOpen(true);
+    };
 
     const handleSliderChange = (id, newValue) => {
         const targetValue = newValue[0]; 
@@ -56,6 +82,7 @@ const Cocktails = () => {
     };
 
     const handleMixClick = () => {
+        if (totalVolume < 200) return;
         const generatedString = value.join(" "); 
         setBarcodeString(generatedString); 
         setIsModalOpen(true);              
@@ -82,17 +109,28 @@ const Cocktails = () => {
                         <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Pump Controller v2.0</p>
                     </div>
                 </div>
-                
-                {/* Кнопка сброса */}
-                <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={handleClear}
-                    disabled={totalVolume === 0}
-                    className="rounded-xl border border-slate-900 bg-slate-900/20 text-slate-400 hover:text-red-400 hover:bg-red-500/10 disabled:opacity-20 transition-all cursor-pointer"
-                >
-                    <Trash2 size={16} />
-                </Button>
+                <div className='gap-2 flex items-center'>
+                    <Button
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => setIsScannerOpen(true)}
+                        disabled={totalVolume < 200}
+                        className="rounded-xl border border-slate-900 bg-slate-900/20 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 disabled:opacity-20 transition-all cursor-pointer"
+                    >
+                            
+                        <QrCode size={16}/>
+                    </Button>
+                    {/* Кнопка сброса */}
+                    <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={handleClear}
+                        disabled={totalVolume === 0}
+                        className="rounded-xl border border-slate-900 bg-slate-900/20 text-slate-400 hover:text-red-400 hover:bg-red-500/10 disabled:opacity-20 transition-all cursor-pointer"
+                    >
+                        <Trash2 size={16} />
+                    </Button>
+                </div>
             </header>
 
             {/* Монитор лимитов и Прогресс-бары */}
@@ -171,13 +209,20 @@ const Cocktails = () => {
 
             {/* Закрепленная снизу плашка с кнопкой Mix */}
             <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent pt-10 pointer-events-none">
-                <div className="max-w-md mx-auto pointer-events-auto">
+                <div className="max-w-md mx-auto pointer-events-auto gap-2 flex items-center">
                     <Button 
-                        disabled={totalVolume === 0}
-                        onClick={handleMixClick}
-                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-6 rounded-2xl shadow-[0_4px_20px_rgba(168,85,247,0.4)] active:scale-[0.98] transition-all cursor-pointer disabled:opacity-10 disabled:pointer-events-none border-none text-base tracking-wide"
+                        disabled={totalVolume < 200}
+                        onClick={prepareShareData}
+                        className="w-[20%] bg-gradient-to-r from-pink-800 to-purple-600 hover:from-pink-500 hover:to-purple-500  text-white font-bold py-6 rounded-2xl shadow-[0_4px_20px_rgba(168,85,247,0.4)] active:scale-[0.98] transition-all cursor-pointer disabled:opacity-10 disabled:pointer-events-none border-none text-base tracking-wide"
                     >
-                        COCKTAIL MIXEN 🍹
+                       <Share size={24}/>
+                    </Button>
+                    <Button 
+                        disabled={totalVolume < 200}
+                        onClick={handleMixClick}
+                        className="w-[80%] bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-6 rounded-2xl shadow-[0_4px_20px_rgba(168,85,247,0.4)] active:scale-[0.98] transition-all cursor-pointer disabled:opacity-10 disabled:pointer-events-none border-none text-base tracking-wide"
+                    >
+                        COCKTAIL MIXEN
                     </Button>
                 </div>
             </div>
@@ -218,7 +263,18 @@ const Cocktails = () => {
                     </DialogHeader>
                 </DialogContent>
             </Dialog>
-
+            {isScannerOpen && (
+                <QrCodeDialog 
+                    open={isScannerOpen} 
+                    onOpenChange={setIsScannerOpen} 
+                    onScanSuccess={handleScanSuccess} 
+                />
+            )}
+            <ShareDialog 
+                open={isShareModalOpen} 
+                onOpenChange={setIsShareModalOpen} 
+                data={shareData} 
+            />
         </div>
     </div>
   )
